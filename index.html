@@ -506,6 +506,21 @@
       padding: 1rem 0 0;
     }
 
+    .test-btn {
+      display: block;
+      margin: 0 auto 1rem;
+      background: #f4f8f8;
+      color: #4FBAB5;
+      border: 1.5px dashed #4FBAB5;
+      padding: 8px 22px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .test-btn:hover { background: #eaf3f3; }
+
     .submit-btn {
       background: #1E2142;
       color: #fff;
@@ -639,7 +654,7 @@
       <div class="field">
         <label class="field-sub-label" data-field="education"></label>
         <div id="eduContainer"></div>
-        <button class="add-tool-btn" onclick="addEducation()" data-key="addEduBtn"></button>
+        <button class="add-tool-btn" id="btnAddEdu" onclick="addEducation()" data-key="addEduBtn"></button>
       </div>
 
       <div class="field">
@@ -669,12 +684,12 @@
         <p data-key="sec2Desc"></p>
       </div>
       <div id="projectsContainer"></div>
-      <button class="add-tool-btn" onclick="addProject()" data-key="addProjectBtn"></button>
+      <button class="add-tool-btn" id="btnAddProj" onclick="addProject()" data-key="addProjectBtn"></button>
 
       <div class="field" style="margin-top:1.75rem;">
         <label class="field-sub-label" data-field="prevExp"></label>
         <div id="expContainer"></div>
-        <button class="add-tool-btn" onclick="addExperience()" data-key="addExpBtn"></button>
+        <button class="add-tool-btn" id="btnAddExp" onclick="addExperience()" data-key="addExpBtn"></button>
       </div>
     </div>
 
@@ -710,6 +725,7 @@
     <!-- SUBMIT -->
     <div class="card">
       <div class="submit-section">
+        <button class="test-btn" id="testBtn" onclick="fillTestData()" style="display:none;">🧪 تعبئة تجريبية / Test fill</button>
         <button class="submit-btn" id="submitBtn" onclick="submitForm()" data-key="submitBtn"></button>
         <p class="footer-note" data-key="footerNote"></p>
       </div>
@@ -900,6 +916,21 @@
     let selectedFile = null;  // CV file: { fileName, mimeType, base64 }
     let selectedPhoto = null; // photo:   { fileName, mimeType, base64 }
 
+    // الحدود القصوى (يجب أن تطابق القيم في Code.gs)
+    const MAX_EDU = 5;
+    const MAX_PROJ = 30;
+    const MAX_EXP = 30;
+
+    // يُظهر/يُخفي أزرار الإضافة حسب بلوغ الحد الأقصى
+    function updateAddButtons() {
+      const eduBtn = document.getElementById('btnAddEdu');
+      const projBtn = document.getElementById('btnAddProj');
+      const expBtn = document.getElementById('btnAddExp');
+      if (eduBtn) eduBtn.style.display = document.querySelectorAll('.edu-card').length >= MAX_EDU ? 'none' : 'block';
+      if (projBtn) projBtn.style.display = document.querySelectorAll('.question-card').length >= MAX_PROJ ? 'none' : 'block';
+      if (expBtn) expBtn.style.display = document.querySelectorAll('.exp-card').length >= MAX_EXP ? 'none' : 'block';
+    }
+
     function setLang(lang) {
       currentLang = lang;
       const html = document.documentElement;
@@ -1043,6 +1074,7 @@
     }
 
     function addEducation() {
+      if (document.querySelectorAll('.edu-card').length >= MAX_EDU) return;
       eduCount++;
       const id = eduCount;
       const t = translations[currentLang];
@@ -1072,12 +1104,14 @@
     `;
       container.appendChild(div);
       renumberEducation();
+      updateAddButtons();
     }
 
     function removeEducation(id) {
       const el = document.getElementById('edu-' + id);
       if (el) el.remove();
       renumberEducation();
+      updateAddButtons();
     }
 
     function renumberEducation() {
@@ -1089,6 +1123,7 @@
     }
 
     function addProject() {
+      if (document.querySelectorAll('.question-card').length >= MAX_PROJ) return;
       projectCount++;
       const id = projectCount;
       const t = translations[currentLang];
@@ -1122,12 +1157,14 @@
     `;
       container.appendChild(div);
       renumberProjects();
+      updateAddButtons();
     }
 
     function removeProject(id) {
       const el = document.getElementById('proj-' + id);
       if (el) el.remove();
       renumberProjects();
+      updateAddButtons();
     }
 
     function renumberProjects() {
@@ -1139,6 +1176,7 @@
     }
 
     function addExperience() {
+      if (document.querySelectorAll('.exp-card').length >= MAX_EXP) return;
       expCount++;
       const id = expCount;
       const t = translations[currentLang];
@@ -1168,12 +1206,14 @@
     `;
       container.appendChild(div);
       renumberExperience();
+      updateAddButtons();
     }
 
     function removeExperience(id) {
       const el = document.getElementById('exp-' + id);
       if (el) el.remove();
       renumberExperience();
+      updateAddButtons();
     }
 
     function renumberExperience() {
@@ -1360,6 +1400,89 @@
       document.getElementById('eduContainer').innerHTML = ''; eduCount = 0; addEducation();
       document.getElementById('projectsContainer').innerHTML = ''; projectCount = 0; addProject();
       document.getElementById('expContainer').innerHTML = ''; expCount = 0; addExperience();
+      updateAddButtons();
+    }
+
+    // ============ أداة الاختبار: تعبئة تلقائية (تظهر فقط مع ?test=1) ============
+    function ensureCount(selector, addFn, target) {
+      let n = document.querySelectorAll(selector).length;
+      while (n < target) { addFn(); n++; }
+    }
+
+    function fillTestData() {
+      document.getElementById('fullName').value = 'سارة الاختبار';
+      document.getElementById('jobTitle').value = 'مطوّرة برمجيات';
+      document.getElementById('years').value = '5';
+      document.getElementById('certifications').value = 'PMP، Azure AI Engineer';
+      document.getElementById('bio').value = 'نبذة تعريفية تجريبية للاختبار.';
+
+      // اللغات: العربية + الإنجليزية
+      document.querySelectorAll('.lang-check').forEach(c => {
+        if (['Arabic', 'English'].includes(c.value)) c.checked = true;
+      });
+
+      // المؤهلات: مؤهلين
+      ensureCount('.edu-card', addEducation, 2);
+      const eduData = [
+        { q: 'Bachelor', u: 'جامعة الملك سعود', s: 'علوم حاسب' },
+        { q: 'Master', u: 'جامعة الملك عبدالعزيز', s: 'الذكاء الاصطناعي' }
+      ];
+      document.querySelectorAll('.edu-card').forEach((card, i) => {
+        const d = eduData[i] || eduData[0];
+        const sel = card.querySelector('select'); if (sel) sel.value = d.q;
+        const ins = card.querySelectorAll('input[type=text]');
+        if (ins[0]) ins[0].value = d.u;
+        if (ins[1]) ins[1].value = d.s;
+      });
+
+      // المشاريع: مشروعين
+      ensureCount('.question-card', addProject, 2);
+      const projData = [
+        { n: 'مشروع القرى التنموية', r: 'مطوّرة رئيسية', d: 'بناء نظام إدارة المشاريع', c: 'NCNP' },
+        { n: 'منصة وزارة السياحة', r: 'مهندسة برمجيات', d: 'تطوير الواجهات والتقارير', c: 'وزارة السياحة' }
+      ];
+      document.querySelectorAll('.question-card').forEach((card, i) => {
+        const d = projData[i] || projData[0];
+        const ins = card.querySelectorAll('input[type=text]'); // [name, role, client]
+        const ta = card.querySelector('textarea');             // desc
+        if (ins[0]) ins[0].value = d.n;
+        if (ins[1]) ins[1].value = d.r;
+        if (ta) ta.value = d.d;
+        if (ins[2]) ins[2].value = d.c;
+      });
+
+      // الخبرات السابقة: خبرتين (مع اسم الجهة)
+      ensureCount('.exp-card', addExperience, 2);
+      const expData = [
+        { t: 'محلل أعمال', e: 'شركة الحلول الذكية', d: 'تحليل المتطلبات وإعداد الوثائق' },
+        { t: 'مدير مشاريع', e: 'شركة التقنية المتقدمة', d: 'إدارة فرق التطوير' }
+      ];
+      document.querySelectorAll('.exp-card').forEach((card, i) => {
+        const d = expData[i] || expData[0];
+        const ins = card.querySelectorAll('input[type=text]'); // [title, entity]
+        const ta = card.querySelector('textarea');             // desc
+        if (ins[0]) ins[0].value = d.t;
+        if (ins[1]) ins[1].value = d.e;
+        if (ta) ta.value = d.d;
+      });
+
+      // ملف سيرة وهمي (يعدّي شرط الإلزامي)
+      selectedFile = { fileName: 'test-cv.txt', mimeType: 'text/plain', base64: btoa('test cv content') };
+      const fd = document.getElementById('fileNameDisplay');
+      fd.innerHTML = '&#128206; test-cv.txt <span class="fn-clear" onclick="clearFile()">' + translations[currentLang].fileClear + '</span>';
+      fd.style.display = 'block';
+
+      // صورة وهمية (1x1 PNG)
+      selectedPhoto = { fileName: 'test.png', mimeType: 'image/png', base64: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==' };
+      const pv = document.getElementById('photoPreview');
+      pv.src = 'data:image/png;base64,' + selectedPhoto.base64;
+      pv.style.display = 'block';
+      document.getElementById('photoIcon').style.display = 'none';
+      const pd = document.getElementById('photoNameDisplay');
+      pd.innerHTML = '&#128247; test.png <span class="fn-clear" onclick="clearPhoto()">' + translations[currentLang].fileClear + '</span>';
+      pd.style.display = 'block';
+
+      alert('تمت التعبئة التجريبية ✅ — اضغط "إرسال النموذج" للاختبار.');
     }
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -1367,6 +1490,11 @@
       addEducation();
       addProject();
       addExperience();
+      updateAddButtons();
+      // إظهار زر الاختبار فقط عند إضافة ?test=1 للرابط
+      if (location.search.indexOf('test=1') !== -1 || location.hash.indexOf('test') !== -1) {
+        document.getElementById('testBtn').style.display = 'block';
+      }
     });
   </script>
 
